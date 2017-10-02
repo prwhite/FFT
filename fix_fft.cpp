@@ -1,3 +1,5 @@
+
+#include <cmath>
 #include "fix_fft.h"
 
 /* fix_fft.c - Fixed-point in-place Fast Fourier Transform  */
@@ -30,6 +32,14 @@
   Enhanced:  Dimitrios P. Bouras  14 Jun 2006 dbouras@ieee.org
 */
 
+  // Moved here because it's only relevant to fftr, and that's not going to be used.
+#define LOG2N              9     //log base 2 of the number of points, e.g. LOG2N = 8 is 256 points
+#define FREQ_RESOLUTION   20     //Frequency resolution of output in Hz
+#define ANALOG_IN          6     //analog input pin
+#define ANALOG_RESOLUTION 14     //CPU specific - e.g. set to 12 for TM4C123/129 and 14 for MSP432
+static const FixFftInt nPts = pow(2,LOG2N);
+static const FixFftInt hiFreq = FREQ_RESOLUTION * (nPts/2 - 1);
+
 #define N_WAVE      1024    /* full length of Sinewave[] */
 #define LOG2_N_WAVE 10      /* log2(N_WAVE) */
 
@@ -43,7 +53,7 @@
   Since we only use 3/4 of N_WAVE, we define only
   this many samples, in order to conserve data space.
 */
-const int Sinewave[N_WAVE-N_WAVE/4] = {
+const FixFftInt Sinewave[N_WAVE-N_WAVE/4] = {
       0,    201,    402,    603,    804,   1005,   1206,   1406,
    1607,   1808,   2009,   2209,   2410,   2610,   2811,   3011,
    3211,   3411,   3611,   3811,   4011,   4210,   4409,   4608,
@@ -148,10 +158,10 @@ const int Sinewave[N_WAVE-N_WAVE/4] = {
   optimization suited to a particluar DSP processor.
   Scaling ensures that result remains 16-bit.
 */
-inline int FIX_MPY(int a, int b)
+inline FixFftInt FIX_MPY(FixFftInt a, FixFftInt b)
 {
   /* shift right one less bit (i.e. 15-1) */
-  int c = ((int)a * (int)b) >> 14;
+  FixFftInt c = ((FixFftInt)a * (FixFftInt)b) >> 14;
   /* last bit shifted out = rounding-bit */
   b = c & 0x01;
   /* last shift + rounding bit */
@@ -165,10 +175,10 @@ inline int FIX_MPY(int a, int b)
   RESULT (in-place FFT), with 0 <= n < 2**m; set inverse to
   0 for forward transform (FFT), or 1 for iFFT.
 */
-int fix_fft(int fr[], int fi[], int m, int inverse)
+FixFftInt fix_fft(FixFftInt fr[], FixFftInt fi[], FixFftInt m, FixFftInt inverse)
 {
-  int mr, nn, i, j, l, k, istep, n, scale, shift;
-  int qr, qi, tr, ti, wr, wi;
+  FixFftInt mr, nn, i, j, l, k, istep, n, scale, shift;
+  FixFftInt qr, qi, tr, ti, wr, wi;
   
   n = 1 << m;
   
@@ -281,10 +291,10 @@ int fix_fft(int fr[], int fi[], int m, int inverse)
   that fix_fft "sees" consecutive real samples as alternating
   real and imaginary samples in the complex array.
 */
-int fix_fftr(int f[], int m, int inverse)
+FixFftInt fix_fftr(FixFftInt f[], FixFftInt m, FixFftInt inverse)
 {
-  int i, n = 1<<(m-1), scale = 0;
-  int tt, *fr=f, *fi=&f[nPts];
+  FixFftInt i, n = 1<<(m-1), scale = 0;
+  FixFftInt tt, *fr=f, *fi=&f[nPts];
   if (inverse)
   scale = fix_fft(fi, fr, m-1, inverse);
   for (i=1; i<nPts; i+=2) {

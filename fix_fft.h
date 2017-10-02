@@ -1,7 +1,8 @@
 #ifndef fix_fft_h
 #define fix_fft_h
 
-#include <Energia.h>
+// #include <Energia.h>
+#include "stdint.h"
 
 #define DEBUG              1     //debug print, 0 = no debug print
 
@@ -28,17 +29,11 @@ Milliseconds for one conversion
     9   |    215     115       65       40       36
    10   |    229     130       81
 */
+
+typedef int16_t FixFftInt;
                                  
-#define LOG2N              9     //log base 2 of the number of points, e.g. LOG2N = 8 is 256 points
-#define FREQ_RESOLUTION   20     //Frequency resolution of output in Hz
-#define ANALOG_IN          6     //analog input pin
-#define ANALOG_RESOLUTION 14     //CPU specific - e.g. set to 12 for TM4C123/129 and 14 for MSP432
-
-const int nPts = pow(2,LOG2N);
-const int hiFreq = FREQ_RESOLUTION * (nPts/2 - 1);
-
-inline int FIX_MPY(int a, int b);
-int fix_fft(int fr[], int fi[], int m, int inverse);
-int fix_fftr(int f[], int m, int inverse);
+inline FixFftInt FIX_MPY(FixFftInt a, FixFftInt b);
+FixFftInt fix_fft(FixFftInt fr[], FixFftInt fi[], FixFftInt m, FixFftInt inverse);
+FixFftInt fix_fftr(FixFftInt f[], FixFftInt m, FixFftInt inverse);
 
 #endif
